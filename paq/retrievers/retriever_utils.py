@@ -56,7 +56,7 @@ class RetrieverEncoder(nn.Module):
 
         retriever = cls(config, proj_dim)
         state = torch.load(os.path.join(model_name_or_path, 'pytorch_model.bin'), map_location=torch.device('cpu'))
-        retriever.model.load_state_dict({k.replace('albert.',''):v for k,v in state.items() if 'encode_proj' not in k}, strict=True)
+        retriever.model.load_state_dict({k.replace('albert.',''):v for k,v in state.items() if 'encode_proj' not in k}, strict=False)
 
         if proj_dim is not None:
             weight_key, bias_key = _get_proj_keys_from_state_dict(state)
