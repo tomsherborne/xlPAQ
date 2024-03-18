@@ -98,7 +98,7 @@ def dump_jsonl(items, fi):
 
     with open(fi, 'w') as f:
         for k, item in enumerate(items):
-            f.write(json.dumps(item) + '\n')
+            f.write(json.dumps(item, ensure_ascii=False) + '\n')
             logging.info(f'Written {k + 1} / {len(items)} items') if k % 10000 == 0 else None
 
     logging.info(f'Written {k + 1} / {len(items)} items')
