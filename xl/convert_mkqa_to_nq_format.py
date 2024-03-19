@@ -35,11 +35,6 @@ def main(args: argparse.Namespace) -> None:
 
     lang2q = defaultdict(list)    
     for ex in mkqa_src:
-
-        # Skip unanswerable questions
-        if ex['answers']['en'][0]['type'] == "unanswerable":
-            continue
-
         for lang in valid_languages:
             lang_ex = {}
 
@@ -48,12 +43,15 @@ def main(args: argparse.Namespace) -> None:
             lang_ex['answer'] = []
 
             for ans_lang in get_answer_langs(args.nlang, valid_languages, lang):
-                lang_ex['answer'].extend([ans['text'] for ans in ex["answers"][ans_lang]])
+                lang_ex['answer'].extend([ans['text'] for ans in ex["answers"][ans_lang] if ans['text'] is not None])
 
                 if args.use_alias:
                     lang_ex['answer'].extend([alias for ans in ex["answers"][ans_lang] for alias in ans.get('aliases', [])])
+
+            lang_ex['answer'] = list(set(filter(lambda x: x is not None, lang_ex['answer'])))
             
-            lang2q[lang].append(lang_ex)
+            if lang_ex['answer'] != []:
+                lang2q[lang].append(lang_ex)
 
     # Output
     for lang in valid_languages:

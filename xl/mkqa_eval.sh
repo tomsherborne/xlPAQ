@@ -7,6 +7,7 @@ LANG="en"
 
 export RESULTS_FILE=${PROJECT_HOME}/results/mkqa_eval_test_${LANG}.jsonl
 export QAS_TO_ANSWER=${PROJECT_HOME}/data/annotated_datasets/data/mkqa/${LANG}.jsonl
+mkdir -p $(dirname ${RESULTS_FILE})
 
 python -m paq.retrievers.retrieve \
     --model_name_or_path ${PROJECT_HOME}/data/models/retrievers/retriever_multi_base_256 \
