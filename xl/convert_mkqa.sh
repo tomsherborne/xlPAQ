@@ -14,7 +14,7 @@ mkdir -p ${DEST_DIR}
 #     --dest ${DEST_DIR} \
 #     --combine
 
-python ${PROJECT_HOME}/scratch/convert_mkqa_to_nq_format.py \
+python ${PROJECT_HOME}/xl/convert_mkqa_to_nq_format.py \
     --source ${SOURCE} \
     --dest ${DEST_DIR} \
     --combine \

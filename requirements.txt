@@ -1,3 +1,7 @@
+-i https://download.pytorch.org/whl/cu118
+torch 
+torchvision 
+torchaudio 
 transformers==4.1.0
 sentencepiece
 tokenizers

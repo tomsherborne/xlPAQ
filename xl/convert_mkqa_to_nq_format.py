@@ -35,6 +35,11 @@ def main(args: argparse.Namespace) -> None:
 
     lang2q = defaultdict(list)    
     for ex in mkqa_src:
+
+        # Skip unanswerable questions
+        if ex['answers']['en'][0]['type'] == "unanswerable":
+            continue
+
         for lang in valid_languages:
             lang_ex = {}
 
