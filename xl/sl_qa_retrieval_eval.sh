@@ -7,18 +7,13 @@
 #SBATCH --gres=gpu:1
 #SBATCH --time=4:00:00
 #SBATCH --mail-type=NONE
-#! Uncomment this to prevent the job from being requeued (e.g. if
-#! interrupted by node failure or system downtime):
-##SBATCH --no-requeue
-#SBATCH --output=/rds/user/%u/hpc-work/pd/logs/%A.out
-#SBATCH --error=/rds/user/%u/hpc-work/pd/logs/%A.out
+#SBATCH --output=/rds/user/%u/hpc-work/pd/logs/%A_%a.out
+#SBATCH --error=/rds/user/%u/hpc-work/pd/logs/%A_%a.out
 
 numnodes=${SLURM_JOB_NUM_NODES}
 numtasks=${SLURM_NTASKS}
 mpi_tasks_per_node=$(echo "${SLURM_TASKS_PER_NODE}" | sed -e  's/^\([0-9][0-9]*\).*$/\1/')
 
-#! Optionally modify the environment seen by the application
-#! (note that SLURM reproduces the environment at submission irrespective of ~/.bashrc):
 . /etc/profile.d/modules.sh                # Leave this line (enables the module command)
 module purge                               # Removes all modules still loaded
 module load rhel8/default-amp              # REQUIRED - loads the basic environment
@@ -49,7 +44,7 @@ echo -e "\nnumtasks=${numtasks}, numnodes=${numnodes}, mpi_tasks_per_node=${mpi_
 export PROJECT_HOME=$(git rev-parse --show-toplevel)
 cd ${PROJECT_HOME}
 
-export LANG=`sed \"${SLURM_ARRAY_TASK_ID}q;d\" $1`
+export LANG="$(sed \"${SLURM_ARRAY_TASK_ID}q;d\" ${1})"
 echo "Running MKQA Evaluation for language ${LANG}"
 
 export JOBNAME="multi_base_256_hnsw_sq8_MKQA_eval_${LANG}"
@@ -77,3 +72,4 @@ python -m paq.evaluation.eval_retriever \
     --hits_at_k 1,10,50
 
 echo "Completed MKQA Evaluation for language ${LANG}"
+
