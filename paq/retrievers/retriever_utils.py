@@ -8,8 +8,7 @@ import torch
 from torch import nn
 import os
 import logging
-from transformers import AutoConfig, AutoTokenizer, AutoModel
-
+from transformers import AutoConfig, AutoTokenizer, AutoModel, MT5EncoderModel, MT5PreTrainedModel
 
 logger = logging.getLogger(__name__)
 
@@ -33,11 +32,20 @@ def _get_proj_dim_from_model_path(model_name_or_path):
 
 def load_retriever(model_name_or_path):
     logger.info(f'Loading model from: {model_name_or_path}')
-    model = RetrieverEncoder.from_pretrained(model_name_or_path)
-    tokenizer = AutoTokenizer.from_pretrained(model_name_or_path, do_lower_case=True)
+    if model_name_or_path.startswith("google/mt5-") or model_name_or_path.startswith("jwieting/vmsst"):
+        return load_mt5_encoder(model_name_or_path)
+    else:
+        model = RetrieverEncoder.from_pretrained(model_name_or_path)
+        tokenizer = AutoTokenizer.from_pretrained(model_name_or_path, do_lower_case=True)
+        model.eval()
+        return model, tokenizer
+
+def load_mt5_encoder(model_name_or_path):
+    logger.info(f'Loading MT5 model from: {model_name_or_path}')
+    model = MT5RetrieverEncoder(model_name_or_path)
+    tokenizer = AutoTokenizer.from_pretrained("google/mt5-base", do_lower_case=True)
     model.eval()
     return model, tokenizer
-
 
 class RetrieverEncoder(nn.Module):
     """A wrapper for HF models, with an optional projection"""
@@ -67,3 +75,49 @@ class RetrieverEncoder(nn.Module):
     def forward(self, *args, **kwargs):
         seq_outputs = self.model(*args, **kwargs)['last_hidden_state']
         return self.encode_proj(seq_outputs[:, 0]) if self.encode_proj is not None else seq_outputs[:, 0]
+
+class MT5RetrieverEncoder(nn.Module):
+    """MT5 Encoder Wrapper"""
+    def __init__(self, model_name_or_path):
+        super().__init__()
+        self.model_name_or_path = model_name_or_path
+        self.setup()
+
+    def setup(self):
+        if self.model_name_or_path == "jwieting/vmsst":
+            model = AutoModel.from_pretrained(self.model_name_or_path, trust_remote_code=True)
+            self.mt5_encoder = model.mt5_encoder
+            self.projection = model.projection
+        else:
+            # Assume google/mt5-*
+            self.mt5_encoder = MT5EncoderModel.from_pretrained(self.model_name_or_path)
+            self.projection = None
+
+    def forward(self, *args, **input_args):
+        hidden_states = self.mt5_encoder(*args, **input_args)['last_hidden_state']
+        mask = input_args['attention_mask']
+        batch_embeddings = torch.sum(hidden_states * mask[:, :, None], dim=1) / torch.sum(mask, dim=1)[:, None]
+
+        if self.projection:
+            batch_embeddings = self.projection(batch_embeddings)
+        
+        return batch_embeddings
+
+# import torch
+# import tqdm
+# from torch import nn
+# from transformers import MT5EncoderModel, MT5PreTrainedModel
+# class MT5EncoderWithProjection(MT5PreTrainedModel):
+#     def __init__(self, config):
+#         super().__init__(config)
+#         self.config = config
+#         self.mt5_encoder = MT5EncoderModel(config)
+#         self.projection = nn.Linear(config.d_model, config.d_model, bias=False)
+#         self.post_init()
+
+#     def forward(self, **input_args):
+#         hidden_states = self.mt5_encoder(**input_args).last_hidden_state
+#         mask = input_args['attention_mask']
+#         batch_embeddings = torch.sum(hidden_states * mask[:, :, None], dim=1) / torch.sum(mask, dim=1)[:, None]
+#         batch_embeddings = self.projection(batch_embeddings)
+#         return batch_embeddings
