@@ -1,41 +1,20 @@
 #!/usr/bin/env bash
 #SBATCH -J faiss_factory
-#SBATCH -A TEAMER-SL2-GPU
-#SBATCH -p ampere
+#SBATCH -p PGR-Standard
 #SBATCH --nodes=1
 #SBATCH --ntasks=1
-#SBATCH --gres=gpu:1
+#SBATCH --gresgpu:a40:2
+#SBATCH --cpus-per-task=32
 #SBATCH --time=36:00:00
 #SBATCH --mail-type=NONE
 #SBATCH --output=/rds/user/%u/hpc-work/pd/logs/%A_%a.out
 #SBATCH --error=/rds/user/%u/hpc-work/pd/logs/%A_%a.out
-
-numnodes=${SLURM_JOB_NUM_NODES}
-numtasks=${SLURM_NTASKS}
-mpi_tasks_per_node=$(echo "${SLURM_TASKS_PER_NODE}" | sed -e  's/^\([0-9][0-9]*\).*$/\1/')
-
-. /etc/profile.d/modules.sh                # Leave this line (enables the module command)
-module purge                               # Removes all modules still loaded
-module load rhel8/default-amp              # REQUIRED - loads the basic environment
-module load cudnn/8.2.4.15-11.4/gcc-9.4.0-vuxt37p
-module load python-3.9.6-gcc-5.4.0-sbr552h
 
 Activate Python Env
 source ${HOME}/sp/pd/pd/bin/activate
 
 echo "$(which python)"
 python -V
-
-## CSD Boilerplate
-export OMP_NUM_THREADS=1
-JOBID=${SLURM_ARRAY_JOB_ID}
-TASKID=${SLURM_ARRAY_TASK_ID}
-echo -e "JobID: ${JOBID}\n======"
-echo -e "TaskID: ${TASKID}\n======"
-echo "Time: `date`"
-echo "Running on master node: `hostname`"
-echo "Current directory: `pwd`"
-echo -e "\nnumtasks=${numtasks}, numnodes=${numnodes}, mpi_tasks_per_node=${mpi_tasks_per_node} (OMP_NUM_THREADS=${OMP_NUM_THREADS})"
 
 ############################
 # Job starts from here
@@ -59,8 +38,8 @@ python -m paq.retrievers.embed \
     --batch_size ${BSZ} \
     --verbose \
     --memory_friendly_parsing \
+    --fp16 \
     --n_jobs -1 
-    # --fp16
 
 python -m paq.retrievers.build_index \
     --embeddings_dir ${EMBED_OUTPUT_DIR} \
