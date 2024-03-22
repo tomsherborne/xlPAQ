@@ -10,8 +10,8 @@
 #SBATCH --output=/rds/user/%u/hpc-work/pd/logs/%A_%a.out
 #SBATCH --error=/rds/user/%u/hpc-work/pd/logs/%A_%a.out
 
-Activate Python Env
-source ${HOME}/sp/pd/pd/bin/activate
+# Activate Python Env
+source ${HOME}/miniconda3/bin/activate pd
 
 echo "$(which python)"
 python -V
