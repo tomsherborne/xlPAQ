@@ -98,7 +98,7 @@ def dump_jsonl(items, fi):
 
     with open(fi, 'w') as f:
         for k, item in enumerate(items):
-            f.write(json.dumps(item, ensure_ascii=False) + '\n')
+            f.write(json.dumps(item) + '\n')
             logging.info(f'Written {k + 1} / {len(items)} items') if k % 10000 == 0 else None
 
     logging.info(f'Written {k + 1} / {len(items)} items')
@@ -189,19 +189,18 @@ def parse_vectors_from_directory(fi, memory_friendly=False, size=None, as_chunks
     return out
 
 
-def get_submitit_executor(n_jobs=10, comment="", partition='learnfair'):
+def get_submitit_executor(n_jobs=10, comment="", partition='cdtgpucluster'):
     if not is_submitit_available():
         raise Exception('Submitit Not installed')
     executor = submitit.AutoExecutor(folder='PAQ_embedding_jobs')
-    executor.update_parameters(timeout_min=120,
+    executor.update_parameters(timeout_min=480,
                                slurm_partition=partition,
                                slurm_nodes=1,
                                slurm_ntasks_per_node=1,
-                               slurm_cpus_per_task=10,
-                               slurm_constraint='volta32gb',
-                               slurm_gpus_per_node='volta:1',
+                               slurm_cpus_per_task=30,
+                               slurm_constraint='rtx3090',
+                               slurm_gpus_per_node='rtx3090:1',
                                slurm_array_parallelism=n_jobs,
                                slurm_comment=comment,
-                               slurm_mem='64G')
+                               slurm_mem='54G')
     return executor
-
