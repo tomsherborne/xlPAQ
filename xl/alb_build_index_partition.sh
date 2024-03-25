@@ -1,8 +1,9 @@
 #!/usr/bin/env bash
 #SBATCH -J faiss_factory
 #SBATCH -p cdtgpucluster
-#SBATCH --nodes=1
-#SBATCH --ntasks=1
+#SBATCH -N 1
+#SBATCH -n 1
+#SBATCH --nnodes=1
 #SBATCH --gres=gpu:1
 #SBATCH --nodelist=charles[02-10]
 #SBATCH --cpus-per-task=28
@@ -19,8 +20,8 @@ python -V
 ############################
 # Job starts from here
 ############################
-EMBED_JOB_N="$(sed \"${SLURM_ARRAY_TASK_ID}q;d\" ${1})"
-EMBED_JOB_TOTAL="$(sed \"${SLURM_ARRAY_TASK_ID}q;d\" ${2})"
+EMBED_JOB_N="`sed \"${SLURM_ARRAY_TASK_ID}q;d\" ${1}`"
+EMBED_JOB_TOTAL="`sed \"${SLURM_ARRAY_TASK_ID}q;d\" ${2}`"
 echo "Embedding partition ${EMBED_JOB_N} of ${EMBED_JOB_TOTAL}"
 
 export PROJECT_HOME=$(git rev-parse --show-toplevel)
@@ -43,11 +44,5 @@ python -m paq.retrievers.embed_partition \
     --fp16 \
     --n_jobs ${EMBED_JOB_TOTAL} \
     --embed_job_n ${EMBED_JOB_N}
-
-# python -m paq.retrievers.build_index \
-#     --embeddings_dir ${EMBED_OUTPUT_DIR} \
-#     --output_path ${FAISS_OUTPUT_DIR}/${FAISS_NAME}.faiss \
-#     --SQ8 \
-#     --verbose 
 
 echo "Completed Index generation"

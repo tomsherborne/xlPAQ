@@ -7,12 +7,8 @@
 import argparse
 import torch
 import logging
-import time
-import math
 import os
-from paq.paq_utils import is_apex_available, load_jsonl, get_submitit_executor, to_fp16
-from paq.retrievers.retriever_utils import load_retriever
-from paq.retrievers.embed import embed, embed_job
+from paq.retrievers.embed import embed_job
 
 logger = logging.getLogger(__name__)
 CUDA = torch.cuda.is_available()
@@ -37,7 +33,7 @@ if __name__ == '__main__':
         raise Exception('Cant use --fp16 without a gpu, CUDA not found')
 
     output_path = os.path.join(args.output_dir, 'embeddings.pt')
-    
+
     embed_job(
         args.qas_to_embed,
         args.model_name_or_path,
