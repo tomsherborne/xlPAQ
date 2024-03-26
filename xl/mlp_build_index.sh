@@ -24,6 +24,7 @@ export PROJECT_HOME=$(git rev-parse --show-toplevel)
 cd ${PROJECT_HOME}
 MODEL_NAME="google/mt5-base"
 FAISS_NAME="PAQ_mt5_base_sq8"
+# FAISS_NAME=$(echo ${MODEL_NAME} | sed 's/\//-/g')
 QAS_TO_EMBED=${PROJECT_HOME}/data/paq/TQA_TRAIN_NQ_TRAIN_PAQ/tqa-train-nq-train-PAQ.jsonl
 EMBED_OUTPUT_DIR=${PROJECT_HOME}/data/embeddings/${FAISS_NAME}
 FAISS_OUTPUT_DIR=${PROJECT_HOME}/data/indices
@@ -44,6 +45,8 @@ python -m paq.retrievers.embed \
 python -m paq.retrievers.build_index \
     --embeddings_dir ${EMBED_OUTPUT_DIR} \
     --output_path ${FAISS_OUTPUT_DIR}/${FAISS_NAME}.faiss \
+    --indexing_batch_size 32768 \
+    --sample_fraction 0.5 \
     --SQ8 \
     --verbose 
 
