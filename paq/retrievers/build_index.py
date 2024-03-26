@@ -102,15 +102,18 @@ def build_index_streaming(cached_embeddings_path,
         chunks_to_add.append(vector_chunk)
 
         if sum(c.shape[0] for c in chunks_to_add) > indexing_batch_size:
-            to_add = torch.cat(chunks_to_add)
+            to_add = torch.cat(chunks_to_add).numpy()
             chunks_to_add = []
             index.add(to_add)
+            del to_add
             added += 1
             logging.info(f'Adding Vectors {added} -> {added + to_add.shape[0]} of {N}')
 
     if len(chunks_to_add) > 0:
         to_add = torch.cat(chunks_to_add)
+        to_add = to_add.numpy()
         index.add(to_add)
+        del to_add
         logging.info(f'Adding Vectors {added} -> {added + to_add.shape[0]} of {N}')
 
     logger.info(f'Index Built, writing index to {output_path}')
