@@ -22,22 +22,23 @@ export EXP_CONFIG="$(cut -d ";" -f1 <<< "${LINE}")"
 # Job starts from here
 ############################
 
-JOBID=${SLURM_ARRAY_JOB_ID}
-TASKID=${SLURM_ARRAY_TASK_ID}
-export LINE=$(sed "${SLURM_ARRAY_TASK_ID}q;d" "$1")
-EMBED_JOB_N="$(cut -d ";" -f1 <<< "${LINE}")"
-EMBED_JOB_TOTAL="$(cut -d ";" -f2 <<< "${LINE}")"
+export JOBID=${SLURM_ARRAY_JOB_ID}
+export TASKID=${SLURM_ARRAY_TASK_ID}
+export MODEL_NAME=${1}
+export BSZ=${2}
+export LINE=$(sed "${SLURM_ARRAY_TASK_ID}q;d" "$3")
+export EMBED_JOB_N="$(cut -d ";" -f1 <<< "${LINE}")"
+export EMBED_JOB_TOTAL="$(cut -d ";" -f2 <<< "${LINE}")"
 echo "Embedding partition ${EMBED_JOB_N} of ${EMBED_JOB_TOTAL}"
-
 export PROJECT_HOME=$(git rev-parse --show-toplevel)
 cd ${PROJECT_HOME}
-MODEL_NAME="google/mt5-base"
-FAISS_NAME="PAQ_mt5_base_sq8"
+FAISS_NAME=$(echo ${MODEL_NAME} | sed 's/\//-/g')
+echo ${FAISS_NAME}
 QAS_TO_EMBED=${PROJECT_HOME}/data/paq/TQA_TRAIN_NQ_TRAIN_PAQ/tqa-train-nq-train-PAQ.jsonl
 EMBED_OUTPUT_DIR=${PROJECT_HOME}/data/embeddings/${FAISS_NAME}
-FAISS_OUTPUT_DIR=${PROJECT_HOME}/data/indices
-BSZ=1024
 mkdir -p ${EMBED_OUTPUT_DIR}
+
+echo "Building embeddings in ${EMBED_OUTPUT_DIR}"
 
 python -m paq.retrievers.embed_partition \
     --model_name_or_path ${MODEL_NAME} \
@@ -50,4 +51,4 @@ python -m paq.retrievers.embed_partition \
     --n_jobs ${EMBED_JOB_TOTAL} \
     --embed_job_n ${EMBED_JOB_N}
 
-echo "Completed Index generation"
+echo "Completed Embedding generation"
