@@ -6,7 +6,9 @@
 #SBATCH --gres=gpu:1
 #SBATCH --exclude=charles[11-19]
 #SBATCH --cpus-per-task=28
+#SBATCH --mem 56000
 #SBATCH --time=4-00:00:00
+
 #SBATCH --output=/home/%u/pd/logs/%A_%a.out
 #SBATCH --error=/home/%u/pd/logs/%A_%a.out
 
